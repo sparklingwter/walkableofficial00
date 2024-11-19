@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:location/location.dart';
 
 class MapPage extends StatefulWidget {
@@ -22,18 +21,10 @@ class _MapPageState extends State<MapPage> {
   static const LatLng _pApplePark = LatLng(37.3346, -122.0090);
   LatLng? _currentP;
 
-  Map<PolylineId, Polyline> polylines = {};
-
   @override
   void initState() {
     super.initState();
-    getLocationUpdates().then(
-      (_) => {
-        getPolylinePoints().then((coordinates) => {
-              generatePolyLineFromPoints(coordinates),
-            }),
-      },
-    );
+    getLocationUpdates();
   }
 
   @override
@@ -65,7 +56,6 @@ class _MapPageState extends State<MapPage> {
                     icon: BitmapDescriptor.defaultMarker,
                     position: _pApplePark)
               },
-              polylines: Set<Polyline>.of(polylines.values),
             ),
     );
   }
@@ -113,58 +103,6 @@ class _MapPageState extends State<MapPage> {
       }
     });
   }
-
-Future<List<LatLng>> getPolylinePoints() async {
-  List<LatLng> polylineCoordinates = [];
-  PolylinePoints polylinePoints = PolylinePoints();
-
-  // Construct the request with required parameters
-  final request = DirectionsRequest(
-    origin: PointLatLng(_pGooglePlex.latitude, _pGooglePlex.longitude),
-    destination: PointLatLng(_pApplePark.latitude, _pApplePark.longitude),
-    travelMode: TravelMode.driving,
-    apiKey: 'YOUR_API_KEY_HERE',
-  );
-
-  // Fetch the route between coordinates
-  PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-    request: request,
-  );
-
-  // Process the result
-  if (result.points.isNotEmpty) {
-    for (var point in result.points) {
-      polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-    }
-  } else {
-    debugPrint(result.errorMessage);
-  }
-  return polylineCoordinates;
 }
 
-  void generatePolyLineFromPoints(List<LatLng> polylineCoordinates) async {
-    PolylineId id = const PolylineId("poly");
-    Polyline polyline = Polyline(
-        polylineId: id,
-        color: Colors.black,
-        points: polylineCoordinates,
-        width: 8);
-    setState(() {
-      polylines[id] = polyline;
-    });
-  }
-}
 
-class DirectionsRequest {
-  final PointLatLng origin;
-  final PointLatLng destination;
-  final TravelMode travelMode;
-  final String apiKey;
-
-  DirectionsRequest({
-    required this.origin,
-    required this.destination,
-    required this.travelMode,
-    required this.apiKey,
-  });
-}
