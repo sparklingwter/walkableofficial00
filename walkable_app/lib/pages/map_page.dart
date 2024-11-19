@@ -114,24 +114,33 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  Future<List<LatLng>> getPolylinePoints() async {
-    List<LatLng> polylineCoordinates = [];
-    PolylinePoints polylinePoints = PolylinePoints();
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-      apiKey: 'YOUR_API_KEY_HERE',
-      origin: PointLatLng(_pGooglePlex.latitude, _pGooglePlex.longitude),
-      destination: PointLatLng(_pApplePark.latitude, _pApplePark.longitude),
-      travelMode: TravelMode.driving,
-    );
-    if (result.points.isNotEmpty) {
-      for (var point in result.points) {
-        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      }
-    } else {
-      debugPrint(result.errorMessage);
+Future<List<LatLng>> getPolylinePoints() async {
+  List<LatLng> polylineCoordinates = [];
+  PolylinePoints polylinePoints = PolylinePoints();
+
+  // Construct the request with required parameters
+  final request = DirectionsRequest(
+    origin: PointLatLng(_pGooglePlex.latitude, _pGooglePlex.longitude),
+    destination: PointLatLng(_pApplePark.latitude, _pApplePark.longitude),
+    travelMode: TravelMode.driving,
+    apiKey: 'YOUR_API_KEY_HERE',
+  );
+
+  // Fetch the route between coordinates
+  PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+    request: request,
+  );
+
+  // Process the result
+  if (result.points.isNotEmpty) {
+    for (var point in result.points) {
+      polylineCoordinates.add(LatLng(point.latitude, point.longitude));
     }
-    return polylineCoordinates;
+  } else {
+    debugPrint(result.errorMessage);
   }
+  return polylineCoordinates;
+}
 
   void generatePolyLineFromPoints(List<LatLng> polylineCoordinates) async {
     PolylineId id = const PolylineId("poly");
@@ -144,4 +153,18 @@ class _MapPageState extends State<MapPage> {
       polylines[id] = polyline;
     });
   }
+}
+
+class DirectionsRequest {
+  final PointLatLng origin;
+  final PointLatLng destination;
+  final TravelMode travelMode;
+  final String apiKey;
+
+  DirectionsRequest({
+    required this.origin,
+    required this.destination,
+    required this.travelMode,
+    required this.apiKey,
+  });
 }
